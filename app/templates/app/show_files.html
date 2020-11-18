@@ -1,0 +1,821 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    .container {
+        top: 45px;
+        margin-left: 80px;
+    }
+    .show_files {
+        padding: 12px;
+    }
+    .show_files div {
+        padding: 8px;
+    }
+    .show_files div a {
+        padding-left: 10px;
+    }
+    .actions {
+        display: inline;
+        padding: 5px;
+    }
+    .actions div {
+        display: inline;
+    }
+    .actions div button {
+        background: #1a73e8;
+        padding: 12px;
+        border: 0;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 6px;
+    }
+    .path {
+        display: inline;
+        padding-left: 15px;
+    }
+
+    .path p {
+        display: inline;
+    }
+
+    .path p a {
+        text-decoration: none;
+        color: cornflowerblue;
+    }
+    .my_files {
+        color: red;
+    }
+
+    .unselet {
+        user-select: none;
+    }
+    .file p {
+        display: inline-block;
+    }
+
+    .file, .folder {
+        background: white;
+        margin-top: 10px;
+        min-height: 40px;
+        width: 70%;
+        border-radius: 10px;
+        border: 1px solid rgb(141, 136, 136);
+        box-shadow: 3px 3px 5px 3px rgb(141, 136, 136);
+    }
+
+    .file a, .folder a {
+        text-decoration: none;
+        color: #1a73e8;
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    .folder:hover, .file:hover {
+        transform: scale(1.01);
+    }
+
+    .file {
+        display: block;
+    }
+    .share_icon {
+        text-decoration: none;
+        color: black;
+    }
+    .dropdown-content {
+        display: none;
+        position: relative;
+        background-color: #f9f9f9;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1;
+        right: 0;
+        max-height: 600px;
+    }
+
+    .dropdown_contacts {
+        overflow-y: auto;
+        max-height: 100%;
+    }
+
+    .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+    }
+
+    .form_files {
+        display: inline;
+    }
+
+    .dropdown-content a:hover {background-color: #f1f1f1}
+
+    .form {
+        display: none;
+    }
+    .contacts {
+        width: 100%;
+        margin: 8px;
+        position: relative;
+        display: block;
+        cursor: pointer;
+    }
+    .details_left {
+        position: relative;
+        display: inline;
+    }
+    .share_details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        max-height: 100px;
+        min-height: 100px;
+        overflow-y: auto;
+    }
+    .share_details div {
+        margin: 10px;
+        border-radius: 8px;
+        background: lightblue;
+    }
+    .share_side_bar {
+        position: fixed;
+        height: 100%;
+        width: 30%;
+        right: -30%;
+        top: 0;
+        bottom: 0;
+        background: white;
+        z-index: 1;
+        padding: 10px;
+        box-shadow: 16px 16px 16px 16px grey;
+    }
+
+    .get_in {
+        -webkit-transition: 0.5s;
+        -moz-transition: 0.5s;
+        -ms-transition: 0.5s;
+        -o-transition: 0.5s;
+        transition: 0.5s;
+        right: 0 !important;
+    }
+
+    .get_out {
+        -webkit-transition: 0.5s;
+        -moz-transition: 0.5s;
+        -ms-transition: 0.5s;
+        -o-transition: 0.5s;
+        transition: 0.5s;
+        right: -30% !important;
+    }
+
+    @keyframes mymove {
+        from {right: -30%;}
+        to {right: 0;}
+    }
+    .close {
+        padding: 5px;
+        position: absolute;
+        cursor: pointer;
+        right: 15px;
+        top: 15px;
+        border: 0;
+        border-radius: 4px;
+        font-size: 20px;
+        background: white;
+        color: black;
+    }
+    .users {
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+    .show_files {
+        max-height: 75vh;
+        overflow-y: auto;
+    }
+    .screen {
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        left: 0;
+        top: 0;
+        background: rgb(202, 199, 199);
+        opacity: 0.2;
+    }
+    .files_search {
+        width: 55%;
+        border: 0;
+        padding: 10px;
+        display: inline;
+        margin-bottom: 20px;
+        box-shadow: 1px 1px 3px 1px grey;
+        margin-right: 20px;
+        border-radius: 12px;
+    }
+    .date_search {
+        padding: 8px;
+        box-shadow: 1px 1px 3px 1px grey;
+        border: 0;
+        border-radius: 12px;
+    }
+    .create_folder {
+        position: fixed;
+        top: -300px;
+        width: 450px;
+        height: 150px;
+        right: 40%;
+        z-index: 6;
+        background: white;
+        box-shadow: 1px 1px 3px 1px grey;
+        border: 0;
+        padding: 15px;
+        border-radius: 15px;
+    }
+    .create_folder_submit {
+        border-radius: 5px;
+        border: 0;
+    }
+    .create_folder h3 {
+        text-align: center;
+        color: red;
+        align-items: center;
+    }
+    .create_folder .create_folder_name {
+        width: 100%;
+        height: 30px;
+        margin-top: 20px;
+        border: 0;
+        box-shadow: 1px 1px 3px 1px grey;
+        padding-left: 7px;
+    }
+    .create_folder .create_folder_submit {
+        margin-top: 15px;
+    }
+
+    .create_folder_in {
+        transition: 0.2s;
+        top: 150px !important;
+    }
+
+    .create_folder_out {
+        transition: 0.2s;
+        top: -300px !important;
+    }
+
+    @keyframes create_folder_move {
+        from {top: -300px;}
+        to {top: 150px;}
+    }
+    .close_div {
+        display: inline;
+        float: right;
+        border: 0;
+        padding: 5px;
+        cursor: pointer;
+    }
+    .share_check {
+        position: fixed;
+        top: -200px;
+        right: 40%;
+        background: white;
+        padding: 15px;
+        border: 0;
+        box-shadow: 1px 1px 3px 1px grey;
+        border-radius: 12px;
+        height: 150px;
+        z-index: 5;
+    }
+    .share_check button {
+        display: inline;
+        background: blue;
+        color: white;
+        font-weight: bold;
+        padding: 8px;
+        margin-right: 8px;
+        border: 0;
+        border-radius: 5px;
+        width: 70px;
+        cursor: pointer;
+    }
+    .share_check_buttons {
+        margin: 0 auto;
+        text-align: center;
+        margin-top: 20px;
+    }
+    .share_check_in {
+        transition: 0.2s;
+        top: 120px !important;
+    }
+
+    .share_check_out {
+        transition: 0.2s;
+        top: -200px !important;
+    }
+
+    @keyframes share_check_move {
+        from {top: -200px;}
+        to {top: 120px;}
+    }
+    .unshare_button {
+        cursor: pointer;
+        color: white;
+        font-weight: bold;
+        padding: 5px;
+        background: blue;
+        border: 0;
+        box-shadow: 1px 1px 3px 1px grey;
+    }
+</style>
+    <script>
+        var file_name_final;
+        var doctor_file_object;
+        var shares_list_test = [];
+    </script>
+    <div class="container">
+        <div class="screen" style="display: none;">
+
+        </div>
+        <div class="share_side_bar">
+            <h3 style="color: red; margin-bottom: 15px;">Share <span class="file_name"></span></h3>
+            <button class="close">X</button>
+            <div style="font-weight: bold; color: blue; font-size: large;">Select Receipient: </div>
+            <input type="text" class="doctor_search" placeholder="search.." style="width: 100%; margin: 8px 0 8px 0; height: 35px; border-radius: 5px;">
+            <div class="users">
+            </div>
+        </div>
+        <div class="create_folder">
+            <div>
+                <div class="close_div">X</div>
+                <form class="create_folder_form" action="{% url 'show_files' %}" method="POST">
+                    <div>
+                        <h3>Create Folder</h3>
+                        <input type="text" class="create_folder_name">
+                    </div>
+                    <div>
+                        <input type="submit" value="Create" class="create_folder_submit" style="color: white; background: blue; font-weight: bold; padding: 8px; ">
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="share_check">
+            <div class="share_check_div">
+                <div style="margin: 0 auto; text-align: center;">
+                    <h3 style="color: rgb(177, 177, 10);">Warning!!</h3>
+                </div>
+                <div style="margin-top: 12px;">
+                    <span>
+                        File is alredy shared with receipient! Do you want to share again?
+                    </span>
+                </div>
+                <div class="share_check_buttons">
+                    <button class="share_yes">Yes</button><button onclick="$('.share_check').addClass('share_check_out'); $('.share_check').removeClass('share_check_in'); $('.screen').hide();">No</button>
+                </div>
+            </div>
+        </div>
+        <main>
+            <h1 class="my_files">WELCOME ANVI DIAGNOSTICS</h1><br>
+            <input type="text" class="files_search" placeholder="Search File or Folder"><input class="date_search" type="date"><br>
+            <div class="actions">
+                <div><button class="upload_folder">Create Folder</button></div>
+                <div><button class="upload_file" onclick="document.querySelector('.upload_files').click()">Upload File</button></div>
+                <form enctype="multipart/form-data" action="{% url 'show_files' %}" class="form" method="POST">
+                    {% csrf_token %}
+                    <input type="text" name="folder_path" value="{{ request.GET.path }}">
+                    <input type="file" style="display: none;" accept="application/pdf" name="files" class="upload_files">
+                    <button class="submit_button" type="submit">Submit</button>
+                </form>
+                <div><button onclick="window.location.href='/default?path=' + '{{ request.GET.path }}'"  class="pdf_create">Create PDF</button></div>
+                <span style="color: blue; font-weight: bold; margin-left: 20px;">Storage Used: <span class="storageSize">{{ totalSize }}</span> MB</span>
+                <span style="color: blue; font-weight: bold; margin-left: 20px;">Folder Size: <span class="folderSize">{{ folderSize }}</span> MB</span>
+                <script type="text/javascript">
+                    document.querySelector('.storageSize').innerHTML = Number(document.querySelector(".storageSize").innerText).toFixed(3);
+                    document.querySelector('.folderSize').innerHTML = Number(document.querySelector(".folderSize").innerText).toFixed(3);
+                </script>
+            </div><br><br>
+            <div class="path">
+                <p><a href="{% url 'show_files' %}?path=home">home</a> / </p>
+                {% if paths %}
+                    {% for path in paths %}
+                        <p><a href="{% url 'show_files' %}?path={{ path.path }}">{{ path.name }}</a> / </p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+                <div class="show_files">
+                    {% if folders %}
+                        {% for folder in folders %}
+                            <div class="folder folder_{{ forloop.counter }}">
+                                <p><i class="fa fa-folder" aria-hidden="true"></i><a href="{% url 'show_files' %}?path={{ request.GET.path }}/{{ folder }}" class="search_key">{{ folder }}</a></p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% if files %}
+                        {% for file in files %}
+                            <div class="file file_search file_{{ forloop.counter }}">
+                                <p><i class="fa fa-file" aria-hidden="true"></i><a href="/{{ file.path }}" target="_blank" class="file_name_get file_id_{{ forloop.counter }} search_key" id="{{file.file_name}}">{{ file.file_name }}</a> <a href="" style="display: none; padding: 5px; background: #1a73e8; color: white; font-size: 14px; border-radius: 8px; margin-left: 20px; float: right; top: 0;" class="share_link_{{ forloop.counter }}" onclick="show_shares({{ forloop.counter }})">Details</a> <a href="" style="padding: 5px; background: red; color: white; font-size: 14px; border-radius: 8px; margin-left: 20px; float: right; top: 0;" class="delete_file delete_file_{{ forloop.counter }}" onclick="delete_file({{ forloop.counter }})">Delete</a></p><br>
+                                <div class="file_details" style="position: relative; max-width: 500px; margin-right: 0; display: inline-block;">
+                                    <p style="display: block;">File Size: {{ file.file_size }} KB</p>
+                                    <p style="display: block;">File Created On: <span class="date_displayed">{{ file.file_date }}</span></p>
+                                </div>
+                                <img class="share_icon share_icon_{{ forloop.counter }}" src="{% static 'accounts/images/share_icon.svg' %}" alt="" style="display: none; width: 40px; color: blue; float: right;">
+                                <div class="share_details" style="display: none;">
+                                    
+                                </div>
+                            </div>
+                            <script>
+                                document.querySelector(".file_{{ forloop.counter }}").addEventListener("mouseover", function(event) {
+                                    event.preventDefault();
+                                    document.querySelector(".share_icon_{{ forloop.counter }}").style.display = 'inline';
+                                })
+                                document.querySelector(".file_{{ forloop.counter }}").addEventListener("mouseout", function(event) {
+                                    event.preventDefault();
+                                    document.querySelector(".share_icon_{{ forloop.counter }}").style.display = 'none';
+                                })
+                                document.querySelector(".share_icon_{{ forloop.counter }}").addEventListener('click', function(event) {
+                                    event.preventDefault();
+                                    var file_name = $('.file_{{ forloop.counter }} .file_name_get').text();
+                                    $('.screen').show();
+                                    $('.share_side_bar .file_name').text(file_name);
+                                    $('.share_side_bar').addClass('get_in');
+                                    $('.share_side_bar').removeClass('get_out');
+                                })
+                            </script>
+                        {% endfor %}
+                </div>
+            {% endif %}
+        </main>
+    </div>
+    <script>
+        if("{{ request.GET.scrollTo }}" !== "") {
+            document.getElementById("{{ request.GET.scrollTo }}").scrollIntoView();
+            document.getElementById("{{ request.GET.scrollTo }}").parentElement.parentElement.style.backgroundColor = "#F0F0F0";
+        }
+        if("{{ request.GET.path }}" === "") {
+            window.location.href = "/files?path=home";
+        }    
+        firebase.database().ref().child('shares').on("child_added", function(snap) {
+            shares_list_test.push(snap.val());
+        });
+        function delete_file(id) {
+            loading('show', 'Deleting File...');
+            var file_name_to_delete = $(`.file_id_${id}`).text();
+            var path = "{{ request.GET.path }}"
+            var shares_number = 0;
+            var file_name_to_delete = $(`.file_id_${id}`).text();
+            var path = "{{ request.GET.path }}"
+            $.ajax({
+                url: "{% url 'show_files' %}",
+                type: "POST",
+                data: {
+                    file_name: file_name_to_delete,
+                    path: path,
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                    action: 'delete_file',
+                }, beforeSend: function() {
+                    console.log("Deleting File...");
+                }, success: function(response) {
+                    while (shares_number < shares_list_test.length) {
+                        var shares_list_object = Object.values(shares_list_test[shares_number]);
+                        for(var i=0; i<shares_list_object.length; i++) {
+                            if(shares_list_object[i].fileName == file_name_to_delete) {
+                                var doctor_token;
+                                for(var j=0; j<doctors_list.length; j++) {
+                                    if(shares_list_object[i].token === doctors_list[j].token) {
+                                        doctor_token = doctors_list[j].userID;
+                                    }
+                                }
+                                var delete_id = Object.keys(shares_list_test[shares_number])[i];
+                                firebase.database().ref('shares/'+ doctor_token +"/"+delete_id).remove().then(function() {
+                                    console.log("Document successfully deleted!");
+                                }).catch(function(error) {
+                                    console.error("Error removing document: ", error);
+                                });
+                                return false;
+                            }
+                        }
+                        shares_number += 1;
+                    }
+                    console.log(response);
+                }
+            })
+            loading('hide', 'File Deleted Successfully..');
+            return false;
+        }
+
+        document.querySelector('.delete_file').addEventListener('click', function(event) {
+            event.preventDefault();
+        })
+
+        document.querySelector('.close_div').addEventListener('click', function(event) {
+            event.preventDefault();
+            document.querySelector('.create_folder_form').reset();
+            $('.create_folder').removeClass('create_folder_in');
+            $('.create_folder').addClass('create_folder_out');
+            $('.screen').hide();
+        })
+        document.querySelector('.files_search').addEventListener('keyup', function(event) {
+            event.preventDefault();
+            var filter_text = this.value.toUpperCase();
+            var data_to_filter = document.querySelectorAll('.search_key');
+            for(var i=0; i<data_to_filter.length; i++) {
+                txtValue = data_to_filter[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter_text) > -1) {
+                    data_to_filter[i].parentElement.parentElement.style.display = "block";
+                } else {
+                    data_to_filter[i].parentElement.parentElement.style.display = 'none';
+                }
+            }
+        })
+        document.querySelector('.date_search').addEventListener('change', function(event) {
+            event.preventDefault();
+            var filter_text = this.value.toUpperCase();
+            var data_to_filter = document.querySelectorAll('.date_displayed');
+            for(var i=0; i<data_to_filter.length; i++) {
+                txtValue = data_to_filter[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter_text) > -1) {
+                    data_to_filter[i].parentElement.parentElement.parentElement.style.display = "block";
+                } else {
+                    data_to_filter[i].parentElement.parentElement.parentElement.style.display = 'none';
+                }
+            }
+        })
+    </script>
+    <script>
+        var shares_list = [];
+        var shares_number = 0;
+    </script>
+    {% for share in shares %}
+        {% for file in files %}
+            {% if share.file_name == file.file_name %}
+                <script>
+                    shares_list.push({"email": "{{ share.receiver_id }}", "file_name": "{{ file.file_name }}"})
+                    document.querySelector('.share_link_{{ forloop.counter }}').style.display = "inline";
+                    $('.file_{{ forloop.counter }} .share_details').append(`
+                        <div>
+                            <p>Shared On: {{ share.share_date_time }}</p><br>
+                            <p>Shared To: {{ share.receiver_id }}</p><br>
+                            <button onclick="unshare_report('{{ share.file_name }}', '{{ share.receiver_id }}')" class="unshare_button">Unshare</button>
+                        </div>
+                    `)
+                    document.querySelector('.share_link_{{ forloop.counter }}').addEventListener('click', function(event) {
+                        event.preventDefault();
+                    })
+                </script>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+    <script>
+        // document.querySelector('.unshare_button').addEventListener('click', function(event) {
+        //     event.preventDefault();
+        // })
+        function unshare_report(file_name, share_user_id) {
+            loading('show', 'Unsharing Report..');
+            $.ajax({
+                url: "{% url 'show_files' %}",
+                type: "POST",
+                data: {
+                    file_name: file_name,
+                    share_user_id: share_user_id,
+                    action: "unshare_report",
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                }, before: function() {
+                    console.log("Sending AJAX Request!!");
+                }, success: function(response) {
+                    if(response.text === 'true') {
+                        for(var i=0; i<doctors_list.length; i++) {
+                            if(doctors_list[i].email == share_user_id) {
+                                var UserID = doctors_list[i].userID;
+                                for(var share_no=0; share_no<shares_list_test.length; share_no++) {
+                                    var shares_list_object = Object.values(shares_list_test[share_no]);
+                                    for(var k=0; k<shares_list_object.length; k++) {
+                                        if(shares_list_object[k].fileName == file_name) {
+                                            var doctor_token;
+                                            for(var j=0; j<doctors_list.length; j++) {
+                                                if(shares_list_object[k].token === doctors_list[j].token) {
+                                                    doctor_token = doctors_list[j].userID;
+                                                }
+                                            }
+                                            var delete_id = Object.keys(shares_list_test[share_no])[k];
+                                            firebase.database().ref('shares/'+ doctor_token +"/"+delete_id).remove().then(function() {
+                                                loading('hide', 'Unshared successfully');
+                                            }).catch(function(error) {
+                                                loading('hide', 'Error occured while unsharing');
+                                            });
+                                            return false;
+                                        }
+                                    }
+                                }
+                            }
+                        }          
+                    } else if(response.text === 'false') {
+                        loading('hide', 'Error occured while unsharing file..')
+                        return false;
+                    }
+                }
+            })
+            return false;
+        }
+        document.querySelector('.doctor_search').addEventListener('keyup', function(event) {
+            event.preventDefault();
+            var filter_text = this.value.toUpperCase();
+            var data_to_filter = document.querySelectorAll('.side_bar_doctor');
+            for(var i=0; i<data_to_filter.length; i++) {
+                txtValue = data_to_filter[i].textContent || data_to_filter[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter_text) > -1) {
+                    data_to_filter[i].style.display = "";
+                } else {
+                    data_to_filter[i].style.display = 'none';
+                }
+            }
+        })
+        $('.close').on('click', function() {
+            $('.share_side_bar').removeClass('get_in');
+            $('.share_side_bar').addClass('get_out');
+            $('.screen').hide();
+        })
+        document.querySelector('.screen').addEventListener('click', function() {
+            event.preventDefault();
+            $('.close').click();
+            $('.close_div').click();
+        })
+        var users_db = firebase.database().ref().child('users');
+        var shares_db = firebase.database().ref().child('shares');
+        var doctor_index = 0;
+        var doctors_list = [];
+        var data_object
+        users_db.on("child_added", function(snap) {
+            data_object = snap.val();
+            doctors_list.push(data_object);
+            $('.users').append(`
+                <p class="side_bar_doctor" onclick="share_doc_to_doctor('${doctor_index}')" style="padding: 8px; margin: 3px; color: white; font-weight: bold; border-radius: 5px; background: blue; cursor: pointer;">${data_object.firstName} ${data_object.lastName} <span style="display: none">${data_object.clinicName} ${doctor_index}</span></p>
+            `)
+            doctor_index++;
+        })
+        function share_doc_to_doctor(id) {
+            var doctor_data = doctors_list[id];
+            var file_name_main = $('.share_side_bar .file_name').text();
+            for(var i=0; i<shares_list.length; i++) {
+                if(shares_list[i].file_name == file_name_main && shares_list[i].email == doctor_data.email) {
+                    $('.share_check').addClass('share_check_in');
+                    $('.share_check').removeClass('share_check_out');
+                    $('.screen').show();
+                    file_name_final = file_name_main;
+                    doctor_file_object = doctor_data;
+                    return false;
+                }
+            }
+            share_function(doctor_data, file_name_main);
+        }
+
+        document.querySelector('.share_yes').addEventListener('click', function(event) {
+            event.preventDefault();
+            share_function(doctor_file_object, file_name_final);
+        })
+        function share_function(doctor_obj, file_name) {
+            loading('show', 'Sharing File');
+            if(doctor_obj.token === "") {
+                loading('hide', 'User not authenticated with app');
+                return false;
+            }
+            var path = "{{ request.GET.path }}";
+            $.ajax({
+                url: "{% url 'show_files' %}",
+                type: "POST",
+                data: {
+                    doctor_name: doctor_obj.firstName + doctor_obj.lastName,
+                    email: doctor_obj.email,
+                    file_name: file_name,
+                    path: path,
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                    action: "share_file",
+                }, beforeSend: function() {
+                    loading('show', 'Sharing File..');
+                }, success: function(response) {
+                    if(response.text == 'true') {
+                        var email = doctor_obj.userID;
+                        var file_path = window.location.host + response.file_path;
+                        var today = new Date();
+                        var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+                        var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+                        firebase.database().ref('shares/'+email).push({
+                            fileName: file_name,
+                            filePath: file_path,
+                            sharedAt: `${date} ${time}`,
+                            token: doctor_obj.token,
+                            userID: doctor_obj.userID,
+                            doctorName: doctor_obj.firstName + " " + doctor_obj.lastName,
+                            seen: 0,
+                            seenAt: "",
+                        })
+                        loading('hide', 'File shared successfully');
+                        $('.share_side_bar').removeClass('get_in');
+                        $('.share_side_bar').addClass('get_out');
+                        $('.share_check').removeClass('share_check_in');
+                        $('.share_check').addClass('share_check_out');
+                        $('.screen').hide();
+                        window.location.reload();
+                    } else if(response.text == "false") {
+                        loading('hide', 'Error occured while sharing file');
+                        $('.screen').hide()
+                    }
+                }
+            })
+        }
+        function show_shares(id) {
+            if(document.querySelector(`.file_${id} .share_details`).style.display == "none") {
+                document.querySelector(`.file_${id} .share_details`).style.display = "grid"
+            } else {
+                document.querySelector(`.file_${id} .share_details`).style.display = "none"
+            }
+        }
+        document.querySelector('.upload_folder').addEventListener('click', function(event) {
+            event.preventDefault();
+            $('.screen').show();
+            $('.create_folder').addClass('create_folder_in');
+            $('.create_folder').removeClass('create_folder_out');
+        })
+
+        document.querySelector('.create_folder_form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var folder_name = document.querySelector('.create_folder_name').value;
+            if(folder_name.length <= 0) {
+                $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Folder Name cant be empty!');
+                $('.notification').css('color', 'red');
+                $('.notifications').addClass('notification_in');
+                $('.notifications').removeClass('notification_out');
+                setTimeout(function() {
+                    $('.notifications').addClass('notification_out');
+                    $('.notifications').removeClass('notification_in');
+                }, 2000)
+            } else {
+                $.ajax({
+                    url: "{% url 'show_files' %}",
+                    type: "GET",
+                    data: {
+                        folder_name: folder_name,
+                        csrfmiddlewaretoken: "{{ csrf_token }}",
+                        action: 'add_folder',
+                        path: "{{ request.GET.path }}",
+                    }, beforeSend: function() {
+                        loading('show', 'Creating Folder...');
+                    }, success: function(response) {
+                        if(response.text == "true") {
+                            loading('hide', 'Folder Created Successfully');
+                        } else if(response.text == 'false') {
+                            loading('hide', 'Folder already existed');
+                        }
+                    }
+                })
+            }
+        })
+
+        document.querySelector('.upload_files').addEventListener('change', function(event) {
+            event.preventDefault();
+            document.querySelector('.submit_button').click();
+        })
+
+        $('.form').on('submit', function(e){
+            e.preventDefault();
+            var formdata = new FormData($('.form')[0]);
+            var file_path = $('.upload_files').val();
+            if(file_path.split(".")[file_path.split(".").length - 1] !== "pdf") {
+                $('.notification').html('<i class="fa fa-check" aria-hidden="true" style="color: red;"></i> PDF Format Files are only allowed to upload..');
+                $('.notification').css('color', 'red');
+                $('.notifications').addClass('notification_in');
+                $('.notifications').removeClass('notification_out');
+                setTimeout(function() {
+                    $('.notifications').addClass('notification_out');
+                    $('.notifications').removeClass('notification_in');
+                }, 2000)
+            } else {
+                $.ajax({
+                    xhr: function() {
+                        var xhr = new window.XMLHttpRequest();
+                        xhr.upload.addEventListener('progress', function(e) {
+                            if(e.lengthComputable) {
+                                var percentage_loaded = Math.round((e.loaded / e.total) * 100);
+                                var message = `Uploading File.. ${percentage_loaded}%`;
+                                loading('show', message);
+                            }
+                        })
+                        return xhr;
+                    },
+                    url: "{% url 'show_files' %}",
+                    type: "POST",
+                    data: formdata,
+                    beforeSend: function() {
+                        loading('show', 'Uploading File...');
+                    }, success: function(response) {
+                        if(response.text == "true") {
+                            loading('hide', 'File Uploaded successfully');
+                        } else if(response.text == 'false') {
+                            loading('hide', 'Error occured while uploading file');
+                        }
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                })
+            }
+        })
+    </script>
+{% endblock content %}

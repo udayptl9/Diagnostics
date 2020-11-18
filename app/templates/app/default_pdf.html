@@ -1,0 +1,891 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+<script>
+    var token;
+</script>
+<style>
+    .paper {
+        width: 95%;
+        border-radius: 15px;
+        box-shadow: 1px 1px 3px 1px grey;
+        margin: 0 auto;
+        border-radius: 15px;
+        height: 100vh;
+        display: grid;
+        background: white;
+        grid-template-columns: 60% 40%;
+        grid-gap: 35px;
+        grid-template-areas: "paper details";
+        transform: scale(0.95);
+    }
+
+    canvas {
+        width: 100% !important;
+        min-height: 100% !important;
+    }
+
+    .outer_div {
+        margin: 0 auto;
+        height: 100vh;
+        width: 100vw;
+        position: fixed;
+        border: 0;
+        top: -200vh;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 5;
+        display: none;
+        background: rgba(0,0,0,0.2);
+    }
+
+    .preview_in {
+        transition: 0.2s;
+        top: 0px !important;
+    }
+
+    .preview_out {
+        transition: 0.2s;
+        top: -100vh !important;
+    }
+
+    @keyframes preview_view {
+        from {top: -100vh;}
+        to {top: 0px;}
+    }
+
+    #paper_main {
+        margin: 0 auto;
+        align-items: center;
+        border: 0;
+        transform: scale(0.90);
+        position: relative;
+        max-height: 100%;
+        overflow-y: auto;
+        max-width: 80%;
+        background: grey;
+        border-radius: 5px;
+        margin-top: 20px;
+
+    }
+    .page_main_outer {
+        position: relative;
+        width: 100%;
+        grid-area: paper;
+        overflow-y: hidden;
+        background: grey;
+        border-radius: 15px;
+        height: 100vh;
+        margin: 0;
+    }
+    .details {
+        grid-area: details;
+        height: 850px;
+        width: 90%;
+        padding: 40px;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }.sms_content {
+        width: 100%;
+        height: 100px;
+    }
+    .pdfDetails {
+        width: 200px;
+        background: white;
+        margin: 0 auto;
+        left: 0;
+        right: 0;
+        margin-top: 20px;
+        border-radius: 5px;
+        color: blue;
+        padding: 8px;
+        font-weight: bold;
+        font-size: 15px;
+        position: absolute;
+        box-shadow: 1px 1px 3px 1px grey;
+        z-index: 6;
+    }
+    .actions_pdf button {
+        display: inline;
+    }
+</style>
+    <div class="editor_div" style="width: 80vw; margin: 0 auto; height: 90%;">
+        <label for="doctor">Radiologist</label>
+        <select class="doctor_selection" id="doctor_selection" name="doctor_selection" style="width: 300px; height: 30px; margin-top: 5px;" onchange="doctorChange()">
+            <option>Select Doctor</option>
+            <option value="Dr. Santosh C. Kulgod">Dr. Santosh C. Kulgod</option>
+            <option value="Dr. Vijayshree A. Gadve">Dr. Vijayshree A. Gadve</option>
+            <option value="Dr. Nijalingappa">Dr. Nijalingappa</option>
+            <option value="Dr. Sachin Shatagar">Dr. Sachin Shatagar</option>
+        </select>
+        <script>
+            function doctorChange() {
+                var doctor_handled_id = document.getElementById("doctor_selection").selectedIndex;
+                document.querySelector('.sign_grid').style.display = 'grid';
+                var index = 1;
+                while(index < 5) {
+                    document.getElementById(`sign_${index}`).innerHTML = "";
+                    index++;
+                }
+                index = 0;
+                if(doctor_handled_id == 0) {
+                    while(index < 5) {
+                        document.getElementById(`sign_${index}`).innerHTML = "";
+                        index++;    
+                    }
+                } else {
+                    document.getElementById(`sign_${doctor_handled_id}`).innerHTML = `<img style="width: 60%;" src="{% static 'accounts/images/signs/sukanyas_Sign.png' %}"/>`;
+                }
+            }
+        </script>
+        <button class="get_changes" style="padding: 8px; background: blue; font-weight: bold; margin-top: 15px; color: white; border: 0; cursor: pointer;">Preview</button>
+        <br><br>
+        <div id="editor">
+            
+        </div>
+        <br>
+    </div>
+    <div class="outer_div">
+    <div class="paper">
+    <div class="page_main_outer">
+        <div class="pdfDetails">
+            <div><span class="pdfPages"></span> Pages</div>
+            <div>PDF Size: <span class="pdfSize"></span> KB</div>
+        </div>
+        <div id="paper_main"></div>
+        <div class="paper_main_" style="display: none;">
+            <style>
+        .address {
+            width: 100%;
+            display: block;
+            border-top: 1px solid black;
+            padding: 5px;
+            border-bottom: 1px solid black;
+            margin-bottom: 2px;
+        }
+        .footer {
+            position: relative;
+            text-align: center;
+            margin: 0 auto;
+            height: 80px;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+        }
+        .ck > .ck-reset, .ck-editor, .ck-rounded-corners {
+            width: 289mm !important;
+            height: 210mm;
+        }
+        .wd-middle {
+            width: 80px;
+            font-size: 15px;
+        }
+        .ck-editor__main {
+            height: 289mm;
+            overflow-y: auto;
+        }
+        .ck-editor {
+            width: 289mm;
+        }
+        
+        .ck-editor__editable {
+            height: 100%;
+        }
+
+        .doctors_table {
+            text-align: center;
+            width: 100%;
+            border: 0;
+        }
+        .doctors_table {
+            text-align: center;
+            width: 100%;
+            border: 0;
+        }
+        .doctors_table td {
+            border: 0;
+            text-align: center;
+        }
+
+        .doctors {
+            width: 100%;
+            text-align: center;
+        }
+        .lab_features {
+            background: rgb(27, 27, 70);
+            color: white;
+            width: 100%;
+            min-height: 25px;
+        }
+        .lab_features div {
+            padding: 2px;
+        }
+        .description {
+            min-height: 700px;
+        }
+        .check_up_type {
+            margin-top: 5px;
+        }
+        .doc_spcialist {
+            font-size: 10px;
+        }
+        .doc_name {
+            font-size: 15px;
+        }
+        .doc_qualification {
+            font-size: 12px;
+        }
+        .services {
+            font-size: 13px;
+            border: 0;
+        }
+        .doc_name {
+            color: brown;
+            font-weight: bold;
+        }
+        .actions_pdf button {
+            margin-right: 5px;
+        }
+        p {
+            margin-top: 15px;
+        }
+        .get_pdf:disabled {
+            cursor: not-allowed !important;
+        }
+        table {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        input, select {
+            border-radius: 8px; 
+        }
+
+        .form {
+            overflow-y: auto;
+        }
+
+        input:disabled, button:disabled, select:disabled {
+        cursor: not-allowed !important;
+        }
+
+        table {
+            width: 100%;
+        }
+        table td {
+            text-align: left;
+            min-height: 100px;
+            border: 1px solid black;
+            padding: 5px;
+        }
+        button {
+            border-radius: 4px;
+        }
+        .head {
+            margin: 0 auto;
+            justify-content: center;
+            text-align: center;
+        }
+        .head img {
+            margin: 0 auto;
+            justify-content: center;
+        }
+        .head_items {
+            width: 100%;
+            margin-bottom: 25px;
+        }
+        .more_options {
+            overflow-y: auto;
+            min-height: 100%;
+        }
+                </style>
+                <img src="{% static 'accounts/images/logo.png' %}" alt="" style="width: 100%;">
+                <div class="toPDF">
+                <div class="head">
+                    <div class="head_items" style="float: left;">
+                        <span class="address">818/A, Goadbole Mala, Near Taj Bawdi, Minakshi Chowk, VIJAYAPUR</span><br>
+                        <span class="services">24x7 EMERGENCY SERVICE 24x7 AMBULANCE SERVICE Ph.: 08352-221555, 9513016555, AMBULANCE : 9513019555</span>
+                    </div>
+                </div>
+                <hr>
+                <section class="description_to_download">
+                    <style>
+                        table {
+                            border: 1px solid black;
+                            border-collapse: collapse;
+                        }
+                        table {
+                            width: 100%;
+                        }
+                        table td {
+                            text-align: left;
+                            min-height: 100px;
+                            border: 1px solid black;
+                            padding: 5px;
+                        }
+                        .doctors_table {
+                            display: grid;
+                            grid-template-columns: repeat(4, 1fr);
+                        }
+                        @page  
+                        { 
+                            size: auto;
+                            margin-top: 30mm;
+                            margin-bottom: 30mm;
+                        }
+                        body  
+                        { 
+                            margin: 0px;  
+                        } 
+                    </style>
+                    <div class="description" style="margin-top: 10px;">
+                    </div>
+                </section>
+                </div>
+                <footer class="footer">
+                    <style>
+                        .sign_grid {
+                            display: grid;
+                            grid-template-columns: repeat(4, 1fr);
+                            grid-gap: 12px;
+                        }
+                    </style>
+                    <div class="doctors">
+                        <div class="sign_grid">
+                            <div id="sign_1"></div>
+                            <div id="sign_2"></div>
+                            <div id="sign_3"></div>
+                            <div id="sign_4"></div>
+                        </div>
+                        <div class="doctors_table">
+                            <div class="doc doc_1">
+                                <div class="doc_name">Dr. Santosh C. Kulgod</div>
+                                <div class="doc_qualification">MBBS, DMRD</div>
+                                <div class="doc_spcialist">Consultant Rediologist</div>
+                            </div>
+                            <div class="doc doc_2">
+                                <div class="doc_name">Dr. Vijayshree A. Gadve</div>
+                                <div class="doc_qualification">MBBS, DMRD</div>
+                                <div class="doc_spcialist">Fellow in USG & Color Doppler, KEM Mumbai</div>
+                            </div>
+                            <div class="doc doc_3">
+                                <div class="doc_name">Dr. Nijalingappa</div>
+                                <div class="doc_qualification">MD, DNB</div>
+                                <div class="doc_spcialist">Fellow in Body Imaging</div>
+                            </div>
+                            <div class="doc doc_4">
+                                <div class="doc_name">Dr. Sachin Shatagar</div>
+                                <div class="doc_qualification">MD, (Radiodiagnosis)</div>
+                                <div class="doc_spcialist">Fellowship in Fetal Medicine</div>
+                            </div>
+                        </table>
+                    </div>
+                    <div class="lab_features">
+                        <table>
+                            <tr>
+                                <td>MRI 1.5 Tesla</td>
+                                <td>CT Scan 32 Slice</td>
+                                <td>UltraSound& Colour Doppler</td>
+                                <td>Digital X-Ray</td>
+                                <td>OPG & Mammography</td>
+                                <td>Pathology</td>
+                            </tr>
+                        </table>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <div class="details">
+            <style>
+                label, input {
+                    width: 100%;
+                }
+                input {
+                    height: 30px;
+                    margin-top: 5px;
+                }
+                .form div {
+                    margin-top: 15px;
+                }
+            </style>
+            <div><h3>Report Description</h3><button style="padding: 6px; position: absolute; color: white; background: blue; font-weight: bold; border: 0; display: inline;" onclick="window.location.reload()">Generate New Report</button></div><br>
+            <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+            <div class="form">
+                <script>
+                    var shared_to;
+                    var smsContent;
+                    var pdfUrl;
+                    var tempFileName;
+                </script>
+                <div class="more_options"></div>
+                    <div>
+                    <div class="actions_pdf"><input type="text" style="width: 40%; margin-right: 10px;" id="file_name" class="file_name" placeholder="Patient name..."><button class="get_pdf" style="padding: 7px; background: blue; color: white; font-weight: bold; border: 0; cursor: pointer;">Save PDF</button><button class="print_pdf" style="padding: 7px; background: blue; color: white; font-weight: bold; border: 0; cursor: pointer;">Print PDF</button>
+                        <div class="shared_to" style="display: none;">
+                            <h4>Shared To: <span class="shared_to_text"></span></h4>
+                        </div>
+                        <br>
+                        <div class="share_options" style="display: none;"><input placeholder="recepient name..." type="text" class="doc_input" style="width: 40%; margin-right: 10px; margin-bottom: 0;"><button class="share_and_save" style="padding: 7px; background: blue; color: white; font-weight: bold; border: 0; cursor: pointer;">Share PDF</button>
+                        <br><div class="doctors_list" style="border: 0; margin-top: 15px; width: 40%; max-height: 300px; overflow-y: auto; width: 350px; padding: 5px;"></div>
+                            <script>
+                                var users_db = firebase.database().ref().child('users');
+                                var doctor_index = 0;
+                                var doctors_list = [];
+                                users_db.on("child_added", function(snap) {
+                                    var data_object = snap.val();
+                                    doctors_list.push(data_object);
+                                    $('.doctors_list').append(`
+                                        <a href="#" class="doc_data doc_dropdown doc_dropdown_${doctor_index}" onclick="recepient_fill(${doctor_index})" style="width: 100%; display: block; border-radius: 15px; box-shadow: 1px 1px 3px 1px grey; text-decoration: none; color: black; padding: 4px;">
+                                            <p class="doc_p_${doctor_index}">${data_object.firstName} ${data_object.lastName}</p>
+                                            <span class="span_element">ID: ${doctor_index}</span><br>
+                                            <small>${data_object.clinicName}</small><br>
+                                            <small style="display: none;" class="user_id_${doctor_index}">${data_object.userID}</small>
+                                        </a>
+                                    `);
+                                    doctor_index++;
+                                })
+                                function recepient_fill(id) {
+                                    var doc_name = document.querySelector(`.doc_p_${id}`).innerText;
+                                    token = document.querySelector(`.user_id_${id}`).innerText;
+                                    document.querySelector('.doc_input').value = doc_name;
+                                    var index = 0;
+                                    while(index<doctors_list.length) {
+                                        if(doctors_list[index].userID == token) {
+                                            document.querySelector('.doctor_phone_number').innerHTML = doctors_list[index].phone;
+                                        }
+                                        index++;
+                                    }
+                                    return false;
+                                }
+                                document.querySelector('.doc_input').addEventListener('keyup', function(event) {
+                                    event.preventDefault();
+                                    var filter_text = this.value.toUpperCase();
+                                    var data_to_filter = document.querySelectorAll('.doc_data');
+                                    for(var i=0; i<data_to_filter.length; i++) {
+                                        txtValue = data_to_filter[i].textContent || data_to_filter[i].innerText;
+                                        if (txtValue.toUpperCase().indexOf(filter_text) > -1) {
+                                            data_to_filter[i].style.display = "block";
+                                        } else {
+                                            data_to_filter[i].style.display = 'none';
+                                        }
+                                    }
+                                })
+                            </script>
+                    </div>
+                    <div class="check_for_sms" style="display: none;">
+                        <label for="">Send Report as SMS</label><br>
+                        <div style="display: inline;">
+                            <input type="checkbox" id="to_doctor" style="width: 50px; height: 18px;">
+                            <label for="to_doctor">Doctor</label><p style="margin-left: 10px; display: inline;" class="doctor_phone_number"></p>
+                        </div><br>
+                        <div style="display: inline;">
+                            <input type="checkbox" id="to_patient" style="width: 50px; height: 18px;">
+                            <label for="to_patient">Patient</label>
+                        </div><br>
+                        <div>
+                            <input type="number" class="patient_number" style="width: 40%; display: none;" max="9999999999" min="0"><small class="small_text" style="display: none;">Number should not exceed 10 digits</small>
+                        </div>
+                        <div>
+                            <textarea class="sms_content"></textarea>
+                            <small style="color: blue;">Report link is shared through SMS but not shown in text box for security purpose!</small>
+                        </div>
+                        <div>
+                            <Button class="send_sms" style="background: blue; font-weight: bold; color: white; padding: 8px; border: 0; cursor: pointer;">Send SMS</Button><a style="padding: 6px; background: blue; color: white; font-weight: bold; text-decoration: none; margin-left: 10px; border: 0; border-radius: 4px;" href="/files?path=home">Home</a>
+                            <script>
+                                document.querySelector('.send_sms').addEventListener('click', function(event) {
+                                    event.preventDefault();
+                                    var sms_content = $('.sms_content').val();
+                                    if(document.getElementById('to_patient').checked) {
+                                        var patient_number = document.querySelector('.patient_number').value;
+                                        if(patient_number.length != 10 || patient_number.includes("+") || patient_number.includes("-") || patient_number.includes(".")) {
+                                            $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Invalid Number!');
+                                            $('.notification').css('color', 'red');
+                                            $('.notifications').addClass('notification_in');
+                                            $('.notifications').removeClass('notification_out');
+                                            setTimeout(function() {
+                                                $('.notifications').addClass('notification_out');
+                                                $('.notifications').removeClass('notification_in');
+                                            }, 2000)
+                                        }
+                                        else {
+                                            var path = "{{ request.GET.path }}";
+                                            var file_name = document.getElementById('file_name').value;
+                                            $.ajax({
+                                                url: "{% url 'default_pdf' %}",
+                                                type: "GET",
+                                                data: {
+                                                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                                                    action: 'send_sms',
+                                                    path: path,
+                                                    host_name: window.location.host,
+                                                    file_name: file_name,
+                                                    sms_content: sms_content,
+                                                    patient_number: patient_number,
+                                                }, beforeSend: function() {
+                                                    document.querySelector('.loading_message').innerText = "Sending SMS to Patient....";
+                                                    document.querySelector('.loading').style.display = 'inline';
+                                                }, success: function(response) {
+                                                    if(response.text == "true") {
+                                                        document.querySelector('.loading_message').innerText = "SMS Sent to Patient";
+                                                        setTimeout(() => {
+                                                            document.querySelector('.loading').style.display = 'none';
+                                                        }, 2000);
+                                                    } else if(response.text == 'false') {
+                                                        $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Error Occured while sending SMS!!');
+                                                        $('.notification').css('color', 'red');
+                                                        $('.notifications').addClass('notification_in');
+                                                        $('.notifications').removeClass('notification_out');
+                                                        setTimeout(function() {
+                                                            $('.notifications').addClass('notification_out');
+                                                            $('.notifications').removeClass('notification_in');
+                                                        }, 2000)
+                                                    }
+                                                }
+                                            })
+                                        }
+                                    }
+                                    if(document.getElementById('to_doctor').checked) {
+                                        var patient_number = Number(document.querySelector('.doctor_phone_number').innerText);
+                                        console.log(patient_number);
+                                        var path = "{{ request.GET.path }}";
+                                        var file_name = document.getElementById('file_name').value;
+                                        $.ajax({
+                                            url: "{% url 'default_pdf' %}",
+                                            type: "GET",
+                                            data: {
+                                                csrfmiddlewaretoken: "{{ csrf_token }}",
+                                                action: 'send_sms',
+                                                path: path,
+                                                host_name: window.location.host,
+                                                file_name: file_name,
+                                                patient_number: patient_number,
+                                            }, beforeSend: function() {
+                                                document.querySelector('.loading_message').innerText = "Sending SMS to Doctor....";
+                                                document.querySelector('.loading').style.display = 'inline';
+                                            }, success: function(response) {
+                                                if(response.text == "true") {
+                                                    document.querySelector('.loading_message').innerText = "SMS Sent to Doctor";
+                                                    setTimeout(() => {
+                                                        document.querySelector('.loading').style.display = 'none';
+                                                    }, 2000);
+                                                } else if(response.text == 'false') {
+                                                    $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Error Occured while sending SMS!!');
+                                                    $('.notification').css('color', 'red');
+                                                    $('.notifications').addClass('notification_in');
+                                                    $('.notifications').removeClass('notification_out');
+                                                    setTimeout(function() {
+                                                        $('.notifications').addClass('notification_out');
+                                                        $('.notifications').removeClass('notification_in');
+                                                    }, 2000)
+                                                }
+                                            }
+                                        })
+                                    }
+                                    if(document.getElementById('to_doctor').checked==false && document.getElementById('to_patient').checked == false) {
+                                        $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> No receiver selected!');
+                                        $('.notification').css('color', 'red');
+                                        $('.notifications').addClass('notification_in');
+                                        $('.notifications').removeClass('notification_out');
+                                        setTimeout(function() {
+                                            $('.notifications').addClass('notification_out');
+                                            $('.notifications').removeClass('notification_in');
+                                        }, 2000)
+                                    } 
+                                })
+                            </script>
+                        </div>
+                    </div>
+                    <script>
+                        document.getElementById('to_patient').addEventListener('change', function(event) {
+                            event.preventDefault();
+                            var patient_request = document.getElementById('to_patient').checked;
+                            if(patient_request) {
+                                document.querySelector('.patient_number').style.display = "block";
+                                document.querySelector('.small_text').style.display = "block";
+                            } else {
+                                document.querySelector('.patient_number').style.display = "none";
+                                document.querySelector('.small_text').style.display = "none";
+                            }
+                        })
+                    </script>
+                <script>
+                    document.querySelector('.print_pdf').addEventListener('click', function(event) {
+                        newWin = window.open(pdfUrl);
+                    })
+                </script>
+                <script>
+                    var content
+                    ClassicEditor
+                        .create(document.querySelector( '#editor' ))
+                        .then(editor => {
+                            content = editor;
+                        })
+                        .catch( error => {
+                            console.error( error );
+                        });
+                    
+                    function previewPDF() {
+                        var doctor_code = document.getElementById("doctor_selection").selectedIndex;
+                        if(doctor_code !== 0) {
+                            document.querySelector('.description').innerHTML = content.getData();
+                            $(".description img").remove();
+                            const pdfContent = document.querySelector('.description').innerHTML;
+                            $.ajax({
+                                url: "{% url 'default_pdf' %}",
+                                type: "GET",
+                                data: {
+                                    paper_code: pdfContent,
+                                    doctor_code: doctor_code,
+                                    action: 'getPreview',
+                                }, beforeSend: function() {
+                                    loading('show', 'Loading Preview...');
+                                }, success: function(response) {
+                                    if(response.text == "true") {
+                                        const url = response.tempPdfPath;
+                                        tempFileName = response.tempFileName;
+                                        pdfUrl = url;
+                                        const pdfSize = response.pdfSize;
+                                        $('#paper_main').empty();
+                                        let pdfDoc = null,
+                                        pageNum = 1,
+                                        pageIsRendering = false,
+                                        pageNumIsPending = null;
+                                        const renderPage = num => {
+                                            pageIsRendering = true;
+                                            while(pageNum <= pdfDoc.numPages) {
+                                                const scale = 10,
+                                                canvas = document.createElement('canvas'),
+                                                ctx = canvas.getContext('2d');
+                                                if(pageNum < pdfDoc.numPages) {
+                                                    canvas.style.marginBottom = "20px";
+                                                }
+                                                pdfDoc.getPage(pageNum).then(page => {
+                                                    const viewport = page.getViewport({ scale });
+                                                    canvas.height = viewport.height;
+                                                    canvas.width = viewport.width;
+                                                    const renderCtx = {
+                                                    canvasContext: ctx,
+                                                    viewport
+                                                    };
+                                                    document.getElementById('paper_main').appendChild(canvas);
+                                                    page.render(renderCtx).promise.then(() => {
+                                                    pageIsRendering = false;
+
+                                                    if (pageNumIsPending !== null) {
+                                                        renderPage(pageNumIsPending);
+                                                        pageNumIsPending = null;
+                                                    }
+                                                    });
+                                                });
+                                                pageNum++;
+                                            }
+                                        };
+                                        pdfjsLib
+                                        .getDocument(url)
+                                        .promise.then(pdfDoc_ => {
+                                            pdfDoc = pdfDoc_;
+                                            document.querySelector('.pdfPages').innerHTML = pdfDoc.numPages;
+                                            document.querySelector('.pdfSize').innerHTML = pdfSize;
+                                            renderPage(pageNum);
+                                        })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                        document.querySelector('.outer_div').style.display = 'grid';
+                                        setTimeout(function() {
+                                            $('.outer_div').addClass('preview_in');
+                                            $('.outer_div').removeClass('preview_out');
+                                        }, 180);
+                                        $(".description img").remove();
+                                        loading('hide', 'Pdf Loaded...', delay=1000, load=false);
+                                    } else if(response.text == 'false') {
+                                        loading('hide', 'Error occured while previewing pdf...', delay=2000, load=false)
+                                    }
+                                }
+                            })
+                        } else {
+                            notification('error', 'Please select radiologist!', 3000);
+                            return false;
+                        }
+                    }
+
+                    document.querySelector('.get_changes').addEventListener('click', function(event){
+                        event.preventDefault();
+                        previewPDF();
+                    })
+                    function getDataFromTheEditor() {
+                        return content.getData();
+                    }
+
+                    function KeyPress(e) {
+                        var evtobj = window.event? event : e
+                        if ( evtobj.ctrlKey && evtobj.keyCode == 13) previewPDF();
+                    }
+
+                    document.onkeydown = KeyPress;
+                    
+                    document.querySelector('.get_pdf').addEventListener('click', function(event) {
+                        event.preventDefault();
+                        var paper_code = document.querySelector('.description_to_download').innerHTML;
+                        var file_name = document.getElementById('file_name').value;
+                        if(file_name.includes(" ")) {
+                            $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Patient Name should not contain spaces!!')
+                            $('.notification').css('color', 'red');
+                            $('.notifications').addClass('notification_in');
+                            $('.notifications').removeClass('notification_out');
+                            setTimeout(function() {
+                                $('.notifications').addClass('notification_out');
+                                $('.notifications').removeClass('notification_in');
+                            }, 2000)
+                        } else {
+                            var doctor_code = document.getElementById("doctor_selection").selectedIndex;
+                            if(doctor_code != 0) {
+                                if(file_name.length > 0) {
+                                    $.ajax({
+                                        url: "{% url 'default_pdf' %}",
+                                        type: "GET",
+                                        data: {
+                                            csrfmiddlewaretoken: "{{ csrf_token }}",
+                                            file_name: file_name,
+                                            tempFileName: tempFileName,
+                                            action: 'getPDF',
+                                            path: "{{ request.GET.path }}"
+                                        }, beforeSend: function() {
+                                            document.querySelector('.loading_message').innerText = "Saving PDF....";
+                                            document.querySelector('.loading').style.display = 'inline';
+                                        }, success: function(response) {
+                                            if(response.text == "true") {
+                                                $('.sms_content').html(`Anvi Diagnostic Centre\nPatient Name: ${file_name}\nReport Status: Ready`)
+                                                document.getElementById('file_name').value = response['file_name'];
+                                                document.querySelector('.share_options').style.display = "block";
+                                                document.querySelector('.loading_message').innerText = "PDF Saved";
+                                                setTimeout(() => {
+                                                    document.querySelector('.loading').style.display = 'none';
+                                                }, 2000);
+                                                document.querySelector('.actions_pdf').style.display = "block";
+                                                document.getElementById('file_name').disabled = true;
+                                                document.querySelector('.get_pdf').disabled = true;
+                                                document.querySelector('.doctor_selection').disabled = true;
+                                            } else if(response.text == 'false') {
+                                                document.querySelector('.loading_message').innerText = "File name already existed";
+                                                setTimeout(() => {
+                                                    document.querySelector('.loading').style.display = 'none';
+                                                }, 2000);
+                                            }
+                                        }
+                                    })
+                                } else {
+                                    $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Patient Name can not be empty!!')
+                                    $('.notification').css('color', 'red');
+                                    $('.notifications').addClass('notification_in');
+                                    $('.notifications').removeClass('notification_out');
+                                    setTimeout(function() {
+                                        $('.notifications').addClass('notification_out');
+                                        $('.notifications').removeClass('notification_in');
+                                    }, 2000)
+                                }
+                            } else {
+                                $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Could not save report without radiologist name!')
+                                $('.notification').css('color', 'red');
+                                $('.notifications').addClass('notification_in');
+                                $('.notifications').removeClass('notification_out');
+                                setTimeout(function() {
+                                    $('.notifications').addClass('notification_out');
+                                    $('.notifications').removeClass('notification_in');
+                                }, 2000)
+                            }
+                        }
+                    })
+                    document.querySelector('.share_and_save').addEventListener('click', function(event) {
+                        event.preventDefault();
+                        var doctor_name = document.querySelector('.doc_input').value;
+                        var index = 0;
+                        var receiver_email;
+                        if(doctor_name.length > 0) {
+                            while(index<doctors_list.length) {
+                                if(doctors_list[index].userID == token) {
+                                    receiver_email = doctors_list[index].userID;
+                                    firstName = doctors_list[index].firstName;
+                                    lastName = doctors_list[index].lastName;
+                                    var file_name = document.querySelector('.file_name').value;
+                                    var path = "{{ request.GET.path }}";
+                                    var user_token = doctors_list[index].token;
+                                    $.ajax({
+                                        url: "{% url 'default_pdf' %}",
+                                        type: "GET",
+                                        data: {
+                                            csrfmiddlewaretoken: "{{ csrf_token }}",
+                                            doctor_name: doctor_name,
+                                            file_name: file_name,
+                                            email: doctors_list[index].email,
+                                            path: path,
+                                            action: "share_file",
+                                        }, beforeSend: function() {
+                                            document.querySelector('.loading_message').innerText = "Sharing File....";
+                                            document.querySelector('.loading').style.display = 'inline';
+                                        }, success: function(response) {
+                                            if(response.text == "true") {
+                                                var email = receiver_email;
+                                                var file_name = response['file_name'];
+                                                var file_path = window.location.host + response['file_path']
+                                                var today = new Date();
+                                                var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+                                                var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+                                                firebase.database().ref('shares/'+email).push({
+                                                    fileName: file_name,
+                                                    filePath: file_path,
+                                                    sharedAt: `${date} ${time}`,
+                                                    token: user_token,
+                                                    userID: receiver_email,
+                                                    doctorName: firstName + " " + lastName,
+                                                    seen: 0,
+                                                    seenAt: "",
+                                                })
+                                                shared_to = doctor_name;
+                                                $('.shared_to_text').html(doctor_name);
+                                                $('.share_options').hide();
+                                                $('.shared_to').show();
+                                                document.querySelector('.check_for_sms').style.display = "block";
+                                                document.querySelector('.loading_message').innerText = "File shared successfully";
+                                                setTimeout(() => {
+                                                    document.querySelector('.loading').style.display = 'none';
+                                                }, 2000);
+                                            } else if(response.text === "false") {
+                                                document.querySelector('.loading_message').innerText = "Error Occured while sharing";
+                                                setTimeout(() => {
+                                                    document.querySelector('.loading').style.display = 'none';
+                                                }, 2000);
+                                            }
+                                        }
+                                    })
+                                }
+                                index++;
+                            }
+                        } else {
+                            $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Please Select Doctor!!');
+                            $('.notification').css('color', 'red');
+                            $('.notifications').addClass('notification_in');
+                            $('.notifications').removeClass('notification_out');
+                            setTimeout(function() {
+                                $('.notifications').addClass('notification_out');
+                                $('.notifications').removeClass('notification_in');
+                            }, 2000)
+                        }
+                    })
+                    $(document).keyup(function(e) {
+                        if (e.keyCode == 27) {
+                            $('.outer_div').removeClass('preview_in');
+                            $('.outer_div').addClass('preview_out');
+                            setTimeout(function() {
+                                document.querySelector('.outer_div').style.display = 'none';
+                            }, 180)
+                        }
+                    });
+                </script>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock content %}

@@ -1,0 +1,36 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+<style>
+    .container {
+        top: 45px;
+    }
+    .sidebar {
+        position: fixed;
+        background-color: bisque;
+        width: 200px;
+        height: 100%;
+        top: 45px;
+    }
+    .sidebar ul {
+        padding: 20px;
+    }
+
+    .sidebar ul li {
+        list-style: none;
+        padding: 10px;
+    }
+    .sidebar ul li:hover {
+        transform: scale(1.08);
+        border: 1px solid black;
+    }
+    .sidebar ul li a{
+        color: rgb(102, 102, 180);
+        text-decoration: none;
+    }
+</style>
+    <div class="container">
+        <main>
+            <h1>Hello</h1>
+        </main>
+    </div>
+{% endblock content %}

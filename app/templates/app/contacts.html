@@ -1,0 +1,404 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    .container {
+        top: 45px;
+        margin-left: 45px;
+    }
+    .show_files {
+        padding: 12px;
+    }
+    .show_files div {
+        padding: 8px;
+    }
+
+    button {
+        border-radius: 5px;
+    }
+
+    .show_files div a {
+        padding-left: 10px;
+    }
+    .actions {
+        display: inline;
+        padding: 5px;
+    }
+    .actions div {
+        display: inline;
+    }
+    .actions div button {
+        background: blue;
+        font-weight: bold;
+        padding: 8px;
+        border: 0;
+        color: white;
+        cursor: pointer;
+    }
+
+    form div {
+        margin: 20px;
+    }
+    form input, form label {
+        width: 100%;
+        padding-left: 3px;
+        border-radius: 4px;
+        color: blue;
+    }
+    form input {
+        height: 30px;
+        border: 0;
+        border-bottom: 1px solid black;
+    }
+    .close {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        background: rgb(195, 195, 236);
+        border: 0;
+        cursor: pointer;
+        padding: 8px;
+    }
+    .close:hover {
+        border: 1px solid black;
+        transform: scale(1.1);
+    }
+    .doc_data {
+        background: white;
+        border: 0;
+        border-radius: 4px;
+        margin: 2px;
+        box-shadow: 3px 3px 5px 3px rgb(141, 136, 136);
+        margin-bottom: 12px;
+        width: 25%;
+    }
+
+    .doc_data a {
+        color: blue;
+        text-decoration: none;
+    }
+    .doc_data:hover {
+        transform: scale(1.005);
+        z-index: 1;
+    }
+    .create_contact {
+        position: absolute;
+        border: 0;
+        border-radius: 8px;
+        width: 550px;
+        height: 700px;
+        overflow-y: auto;
+        background:white;
+        left: 40%;
+        top: -750px;
+        z-index: 2;
+        box-shadow: 3px 3px 5px 3px grey;
+    }
+    .contact_in {
+        transition: 0.5s;
+        top: 70px !important;
+    }
+
+    .contact_out {
+        transition: 0.5s;
+        top: -750px !important;
+    }
+
+    @keyframes mymove {
+        from {top: -750px;}
+        to {top: 70px;}
+    }
+    .screen {
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        left: 0;
+        top: 0;
+        background: rgb(202, 199, 199);
+        opacity: 0.2;
+    }
+    .doctor_icon {
+        display: inline;
+        width: 60px;
+        margin: 20px;
+    }
+    .doctor_add_div {
+        width: 100%;
+    }
+    .doctor_add_div h3 {
+        align-items: center;
+        float: right;
+    }
+</style>
+    <div class="container">
+        <div class="screen" style="display: none;">
+
+        </div>
+        <div class="create_contact">
+            <div class="form">
+                <div class="doctor_add_div">
+                    <img class="doctor_icon" src="{% static 'accounts/images/doctor_icon.png' %}" alt="">
+                    <h3 style="display: inline; width: 100%; text-align: center; margin: 0 auto; color: blue;">Add Doctor</h3>
+                </div>
+                <button class="close">X</button>
+                <form action="{% url 'contacts' %}" method="POST">
+                    <div>
+                        <label for="email">Email</label>
+                        <input type="email" class="email" name="email" required>
+                    </div>
+                    <div>
+                        <label for="first_name">First Name</label>
+                        <input type="text" class="first_name" name="first_name" required>
+                    </div>
+                    <div>
+                        <label for="last_name">Last Name</label>
+                        <input type="text" class="last_name" name="last_name" required>
+                    </div>
+                    <div>
+                        <label for="phone_number">Phone Number</label>
+                        <input type="number" class="phone_number" name="phone_number" required>
+                    </div>
+                    <div>
+                        <label for="hospital_name">Hospital Name</label>
+                        <input type="text" class="hospital_name" name="hospital_name" required>
+                    </div>
+                    <div>
+                        <label for="password1">Password</label>
+                        <input type="password" class="password1" name="password1" required>
+                    </div>
+                    <div>
+                        <label for="password2">Confirm-Password</label>
+                        <input type="password" class="password2" name="password2"required>
+                    </div>
+                    <div>
+                        <input style="background: blue; font-weight: bold; color: white; cursor: pointer; border: 0; width: 45%; display: inline;" type="submit" value="Submit">
+                        <input style="background: blue; font-weight: bold; color: white; cursor: pointer; border: 0; width: 45%; display: none;" type="button" class="send_user_details" value="Send SMS in ">
+                    </div>
+                </form>
+            </div>
+        </div>
+        <main>
+            <h1 style="color: red;">Doctors</h1><br>
+            <div class="actions">
+                <div><button class="create_contact_button">Add Doctor</button></div>
+            </div>
+            <div class="show_files">
+                
+            </div>
+            <script>
+                var doctors_list = [];
+                var doctor_index = 0;
+                var users_db = firebase.database().ref().child('users');
+                users_db.on("child_added", function(snap) {
+                    var data_object = snap.val();
+                    doctors_list.push(data_object);
+                    $('.show_files').append(`
+                        <div class="doc_data ${data_object.token}"><span class="token_detect_${doctor_index}" style="display: inline; padding: 5px; padding-left: 10px;"></span>
+                            <a href="#" class="doc_dropdown_${doctor_index}" onclick="show_doc_details(${doctor_index})">${data_object.firstName} ${data_object.lastName}</a>
+                            <div class="doctor_details_${doctor_index}" style="display: none;">
+                                <span class="span_element">ID: ${doctor_index}</span><br>
+                                <span>Email: ${data_object.email}</span><br>
+                                <span>Phone No.: ${data_object.phone}</span><br>
+                                <span class="span_element">Hospital: ${data_object.clinicName}</span><br>
+                                <span>First Name: ${data_object.firstName}</span><br>
+                                <span>Last Name: ${data_object.lastName}</span><br>
+                                <button onclick="delete_user('${data_object.userID}')" style="border: 0; padding: 5px; background: red; color: white; cursor: pointer; font-weight: bold;" class="delete_user">Delete</button>
+                            </div>
+                        </div>
+                    `);
+                    doctor_index++;
+                })
+                setTimeout(function() {
+                    doctor_index = 0;
+                    while(doctor_index < doctors_list.length) {
+                        if(doctors_list[doctor_index].token == "" || doctors_list[doctor_index].userID === undefined) {
+                            $(`.token_detect_${doctor_index}`).css('background', 'red');
+                        } else {
+                            $(`.token_detect_${doctor_index}`).css('background', 'green');
+                        }
+                        doctor_index++;
+                    }
+                }, 4000)
+
+                document.querySelector('.screen').addEventListener('click', function() {
+                    event.preventDefault();
+                    $('.close').click();
+                })
+
+                function delete_user(id) {
+                    document.querySelector('.loading_message').innerText = "Deleting User....";
+                    document.querySelector('.loading').style.display = 'inline';
+                    console.log(id);
+                    $.post(
+                        "https://us-central1-anvi-48aa3.cloudfunctions.net/deleteUser",
+                        {uid: id},
+                        function(data) {
+                            console.log(data);
+                            if(data == "OK") {
+                                document.querySelector('.loading_message').innerText = "User Deleted Successfully!!";
+                                setTimeout(() => {
+                                    document.querySelector('.loading').style.display = 'none';
+                                    window.location.reload();
+                                }, 2000);
+                            }
+                        }
+                    );
+                    // $.ajax({
+                    //     url: "https://us-central1-anvi-48aa3.cloudfunctions.net/deleteUser",
+                    //     type: "POST",
+                    //     body: {
+                    //         uid: id,
+                    //     },
+                    //     contentType:'application/json',
+                    //     before: function() {
+                    //         document.querySelector('.loading_message').innerText = "Deleting User....";
+                    //         document.querySelector('.loading').style.display = 'inline';
+                    //     }, success: function(event) {
+                    //         document.querySelector('.loading_message').innerText = "User Deleted Successfully!!";
+                    //         setTimeout(() => {
+                    //             document.querySelector('.loading').style.display = 'none';
+                    //         }, 2000);       
+                    //     }
+
+                    // })
+                    // document.querySelector('.loading_message').innerText = "Deleting User....";
+                    // document.querySelector('.loading').style.display = 'inline';
+                    // firebase.database().ref('users/'+id).remove();
+                    // document.querySelector('.loading_message').innerText = "User Deleted Successfully!!";
+                    // setTimeout(() => {
+                    //     document.querySelector('.loading').style.display = 'none';
+                    // }, 2000);
+                }
+
+                users_db.on("child_removed", function(snapshot) {
+                    var deleted_user_token = snapshot.val().token;
+                    $(`.${deleted_user_token}`).remove();
+                });
+
+                function show_doc_details(id) {
+                    if(document.querySelector(`.doctor_details_${id}`).style.display == "none") {
+                        document.querySelector(`.doctor_details_${id}`).style.display = "block";
+                    } else {
+                        document.querySelector(`.doctor_details_${id}`).style.display = "none";
+                    }
+                }
+
+                document.querySelector('.close').addEventListener('click', function(event) {
+                    event.preventDefault();
+                    $('.screen').hide();
+                    $('.create_contact').removeClass('contact_in');
+                    $('.create_contact').addClass('contact_out');
+                })
+                document.querySelector('.create_contact_button').addEventListener('click', function(event) {
+                    event.preventDefault();
+                    $('.screen').show();
+                    $('.create_contact').addClass('contact_in');
+                    $('.create_contact').removeClass('contact_out');
+                })
+                var x;
+                document.querySelector('form').addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    document.querySelector('.loading_message').innerText = "Creating User....";
+                    document.querySelector('.loading').style.display = 'inline';
+                    var email = document.querySelector('.email').value;
+                    var first_name = document.querySelector('.first_name').value;
+                    var last_name = document.querySelector('.last_name').value;
+                    var phone_number = document.querySelector('.phone_number').value;
+                    var hospital_name = document.querySelector('.hospital_name').value;
+                    var password1 = document.querySelector('.password1').value;
+                    var password2 = document.querySelector('.password2').value;
+                    var dt = new Date().getTime();
+                    if(password1 === password2) {
+                        document.querySelector('.send_user_details').style.display = "inline";
+                        firebase.auth().createUserWithEmailAndPassword(email, password1)
+                        .then(function(data) {
+                            var userID = data.user.uid;
+                            firebase.database().ref('users/'+userID).set({
+                                email: email,
+                                userID: userID,
+                                firstName: first_name,
+                                lastName: last_name,
+                                phone: phone_number,
+                                clinicName: hospital_name,
+                                displayName: first_name+last_name,
+                                token: "",
+                            })
+                            var time = 10;
+                            document.querySelector('.loading_message').innerText = "User Created Successfully!!";
+                            setTimeout(() => {
+                                document.querySelector('.loading').style.display = 'none';
+                            }, 2000);
+                            if(document.querySelector(".send_user_details").style.display == "inline") {
+                                x = setInterval(function(){
+                                    if(time!=0) {
+                                        document.querySelector('.send_user_details').value = "Send User details as SMS in "+time+"s";
+                                    }
+                                    else {
+                                        document.querySelector('.send_user_details').style.display = "none";
+                                        document.querySelector('.create_contact').style.display = "none";
+                                        document.querySelector('form').reset();
+                                        $('.close').click();
+                                        clearInterval(x);
+                                        window.location.reload();
+                                    }
+                                    time--;
+                                }, 1000)
+                            } else {
+                                console.log("button could not be displayed")
+                            }
+                        })
+                        .catch(function(error) {
+                            if(error.code == "auth/email-already-in-use") {
+                                document.querySelector('.loading').style.display = 'none';
+                                $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> User Already Existed!!')
+                                $('.notification').css('color', 'red');
+                                $('.notifications').addClass('notification_in');
+                                $('.notifications').removeClass('notification_out');
+                                setTimeout(function() {
+                                    $('.notifications').addClass('notification_out');
+                                    $('.notifications').removeClass('notification_in');
+                                }, 6000)
+                            }
+                        })
+                    } else {
+                        document.querySelector('.loading').style.display = 'none';
+                        $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Passwords do not match!!')
+                        $('.notification').css('color', 'red');
+                        $('.notifications').addClass('notification_in');
+                        $('.notifications').removeClass('notification_out');
+                        setTimeout(function() {
+                            $('.notifications').addClass('notification_out');
+                            $('.notifications').removeClass('notification_in');
+                        }, 6000)
+                    }
+                })
+                document.querySelector('.send_user_details').addEventListener('click', function(event) {
+                    event.preventDefault();
+                    var email = document.querySelector('.email').value;
+                    var password = document.querySelector('.password1').value;
+                    var phone = document.querySelector('.phone_number').value;
+                    $.ajax({
+                        url: "{% url 'contacts' %}",
+                        type: "POST",
+                        data: {
+                            csrfmiddlewaretoken: "{{ csrf_token }}",
+                            email: email,
+                            password: password,
+                            phone_number: phone,
+                            action: "send_user_data",
+                        }, beforeSend: function() {
+                            clearInterval(x);
+                            document.querySelector('.send_user_details').value = "Sending SMS!";
+                        }, success:function(response) {
+                            document.querySelector('.send_user_details').style.display = "none";
+                            document.querySelector('.create_contact').style.display = "none";
+                            document.querySelector('form').reset();
+                        }
+                     })
+                })
+            </script>
+        </main>
+    </div>
+    <script>
+    </script>
+{% endblock content %}

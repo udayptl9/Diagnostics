@@ -1,0 +1,75 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    .container {
+        width: 100%;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .container img {
+        width: 60%;
+    }
+
+    .container form {
+        width: 30%;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid rgb(88,164,120);
+        box-shadow: 5px 3px 8px 3px rgb(88,164,120);
+        border-radius: 10px;
+        margin-top: 60px;
+    }
+
+    form h3 {
+        text-align: center;
+    }
+
+
+    .container div {
+        margin: 15px;
+    }
+
+    .container form input, .container form select {
+        border-radius: 8px;
+        padding-left: 5px;
+    }
+
+    .container form label, .container form input, .container form select {
+        width: 100%;
+        height: 40px;
+    }
+    .captcha {
+        width: 50px !important;
+    }
+    .container .submit {
+        background: rgb(97, 153, 97);
+        color: white;
+        padding: 8px;
+        border: 0;
+        cursor: pointer;
+    }
+</style>
+    <div class="container">
+        <img src="{% static 'accounts/images/logo.png' %}" alt="">
+        <form method="POST" action="{% url 'login_user' %}">
+            {% csrf_token %}
+            <h3>Login</h3>
+            <div>
+                <label for="email">Email</label>
+                <input type="email" name="email" class="email" required>
+            </div>
+            <div>
+                <label for="password">Password</label>
+                <input type="password" name="password" class="password" required>
+            </div>
+            <div>
+                <button class="submit" type="submit">Login</button>
+            </div>
+        </form>
+    </div>
+    <script>
+       
+    </script>
+{% endblock content %}

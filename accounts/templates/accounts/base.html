@@ -1,0 +1,407 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if title %}
+        <title>Lab Repo - {{ title }}</title>
+    {% else %}
+        <title>Lab Repo</title>
+    {% endif %}
+    <link rel="stylesheet" href="{% static 'accounts/main.css' %}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<script
+    src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+    crossorigin="anonymous"
+></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/23.0.0/classic/ckeditor.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.5/jspdf.min.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/7.23.0/firebase-auth.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/7.23.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-database.js"></script>
+<script>
+    var firebaseConfig = {
+        apiKey: "AIzaSyCkMd4dg9xq9JfelWe1ZG67tQFKbE2ud-4",
+        authDomain: "anvi-48aa3.firebaseapp.com",
+        databaseURL: "https://anvi-48aa3.firebaseio.com",
+        projectId: "anvi-48aa3",
+        storageBucket: "anvi-48aa3.appspot.com",
+        messagingSenderId: "1028522121582",
+        appId: "1:1028522121582:web:4fdf5c2c10a02f310ac97f",
+        measurementId: "G-7N6H9LDGWV"
+    };
+    firebase.initializeApp(firebaseConfig);
+</script>
+<style>
+    body {
+        background: white;
+        user-select: none;
+    }
+    .logo {
+        text-transform: uppercase;
+        font-weight: bold;
+        font-size: 35px;
+        color: red;
+        text-align: center;
+    }
+    .logo img {
+        width: 100%;
+    }
+    .errors p {
+        border: 0;
+        border-radius: 8px;
+    }
+    header, .sidebar {
+        background: white;
+        width: 200px;
+        box-shadow: 5px 5px 5px 0 grey;
+    }
+    .sidebar ul li a {
+        text-decoration: none;
+        color: red;
+        font-size: 18px;
+        border: 0;
+    }
+    .sidebar ul li:hover {
+        border: 0;
+        border-radius: 8px;
+        border-bottom: 1px solid black;
+        box-shadow: 1px 1px 3px 1px rgb(141, 136, 136);
+    }
+    .loading {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        width: 100vw;
+        z-index: 1000;
+        background: rgba(158, 158, 201, 0.5);
+    }
+    .loading .logo {
+        position: relative;
+        top: 35%;
+        left: 45%;
+    }
+
+    .loading .logo img {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        z-index: 1002;
+        top: 0px;
+    }
+
+    .loader {
+        position: absolute;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #3498db;
+        border-bottom: 16px solid #3498db;
+        background: 16px solid #f3f3f3;
+        width: 170px;
+        height: 170px;
+        animation: spin 1s linear infinite;
+        z-index: 1001;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .notifications {
+        position: fixed;
+        right: -300px;
+        top: 40px;
+        padding: 12px;
+        height: 100px;
+        width: 300px;
+        box-shadow: 1px 1px 3px 1px rgb(141, 136, 136);
+        z-index: 6;
+        background: white;
+        opacity: 1;
+    }
+
+    .notification {
+        position: absolute;
+        margin-top: 3px;
+        color: black;
+        width: 270px;
+        height: 50px;
+        padding: 5px;
+    }
+
+    .notification_in {
+        transition: 0.5s;
+        right: 30px !important;
+    }
+
+    .notification_out {
+        transition: 0.5s;
+        right: -300px !important;
+    }
+
+    @keyframes mymovein {
+        from {right: -300px;}
+        to {right: 30px;}
+    }
+    .password_reset {
+        position: fixed;
+        top: -700px;
+        width: 450px;
+        height: 170px;
+        right: 40%;
+        z-index: 7;
+        background: white;
+        box-shadow: 1px 1px 3px 1px grey;
+        border: 0;
+        padding: 15px;
+        border-radius: 15px;
+        margin: 0 auto;
+    }
+    .password_reset h3 {
+        color: red;
+        font-weight: bold;
+        text-align: center;
+    }
+    .password_reset input {
+        width: 90%;
+        margin: 0 auto;
+        height: 30px;
+        border: 0;
+        border-bottom: 1px solid blue;
+        color: blue;
+        margin: 15px;
+    }
+    .password_reset button {
+        padding: 8px;
+        border: 0;
+        margin-left: 115px;
+        background: blue;
+        font-weight: bold;
+        color: white;
+        margin-top: 10px;
+        border-radius: 8px;
+    }
+    .password_in {
+        transition: 0.5s;
+        top: 150px !important;
+    }
+
+    .password_out {
+        transition: 0.5s;
+        top: -700px !important;
+    }
+
+    @keyframes passwordin {
+        from {top: -700px;}
+        to {top: 150px;}
+    }
+    .close_password {
+        display: inline;
+        float: right;
+        border: 0;
+        padding: 5px;
+        cursor: pointer;
+    }
+    .passwordScreen {
+        position: fixed;
+        display: none;
+        width: 100vw;
+        height: 100vh;
+        top: 0;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        background: rgba(158, 158, 201, 0.5);
+        z-index: 6;
+    }
+</style>
+<body>
+    <div class="loading" style="display: none;">
+        <div class="logo">
+            <div class="loader"></div>
+            <img src="{% static 'accounts/images/anvi_round_logo.png' %}" alt="">
+            <p class="loading_message" style="font-size: 20px; color: black; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; text-transform: none;">Loading Screen...</p>
+        </div>
+    </div>
+    <div class="notifications">
+        <h4 style="color: blue;">Notification</h4>
+        {% if messages %}
+            {% for message in messages %}
+                <span class="notification">{{ message }}</span>
+            {% endfor %}
+        {% else %}
+            <span class="notification"></span>
+        {% endif %}
+    </div>
+    <div class="passwordScreen"></div>
+    <div class="password_reset">
+        <div class="close_password">X</div>
+        <h3>Password Reset</h3>
+        <div class="password_form">
+            <input type="email" class="passwordResetEmail" placeholder="email">
+            <button class="submitPasswordReset">Request Password Reset</button>
+        </div>
+    </div>
+    <div class="page">
+        <div class="sidebar">
+            <div class="logo"><img src="{% static 'accounts/images/anvi_round_logo.png' %}" alt=""></div>
+            <ul>
+                {% if request.session.user %}
+                    <li><a href="{% url 'show_files' %}?path=home"><i class="fa fa-5 fa-folder-o" style="color: red;" aria-hidden="true"></i> All Files</a></li>
+                    <li><a href="{% url 'shares' %}"><i class="fa fa-share-square-o" aria-hidden="true"></i>
+                        View Shares</a></li>
+                    <li><a href="{% url 'contacts' %}"><i class="fa fa-address-book" aria-hidden="true"></i>
+                        Contacts</a></li>
+                    <li><a href="" class="passwordResetLink"><i class="fa fa-key" aria-hidden="true"></i>
+                        Reset Password</a></li>
+                    <li><a href="{% url 'logout_user' %}"><i class="fa fa-sign-out" aria-hidden="true"></i>
+                        Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'login_user' %}"><i class="fa fa-sign-in" aria-hidden="true"></i>
+                        Login</a></li>
+                    <li><a href="" class="passwordResetLink"><i class="fa fa-key" aria-hidden="true"></i>
+                        Forget Password</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        <section>
+            <script type="text/javascript">
+                document.body.style.zoom = "100%";
+                function loading(type, message, delay=2000, load=true) {
+                    if (type === 'hide') {
+                        document.querySelector('.loading_message').innerText = message;
+                        setTimeout(() => {
+                            document.querySelector('.loading').style.display = 'none';
+                            if(load) {
+                                window.location.reload();
+                            }
+                        }, delay)
+                    } else if (type === 'show'){
+                        document.querySelector('.loading_message').innerText = message;
+                        document.querySelector('.loading').style.display = 'inline';
+                    } else {
+                        console.log("Error: Please check type of loading!!")
+                    }
+                }
+                function notification(type='error', message='Error Message', delay=2000) {
+                    if(type==='error') {
+                        $('.notification').html(`<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> ${message}`);
+                        $('.notification').css('color', 'red');
+                    } else if (type==='success') {
+                        $('.notification').html(`<i class="fa fa-check" aria-hidden="true" style="color: green;"></i> ${message}`);
+                        $('.notification').css('color', 'green');
+                    } else {
+                        $('.notification').html(`<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Please Check Message type.`);
+                        $('.notification').css('color', 'red');
+                    }
+                    $('.notifications').addClass('notification_in');
+                    $('.notifications').removeClass('notification_out');
+                    setTimeout(function() {
+                        $('.notifications').addClass('notification_out');
+                        $('.notifications').removeClass('notification_in');
+                    }, delay)
+                }
+                function removePasswordForm() {
+                    $('.password_reset').removeClass('password_in');
+                    $('.password_reset').addClass('password_out');
+                    document.querySelector('.passwordResetEmail').value = "";
+                    document.querySelector('.passwordScreen').style.display = 'none'; 
+                }
+                document.querySelector('.submitPasswordReset').addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const email = document.querySelector('.passwordResetEmail').value;
+                    $.ajax({
+                        url: '{% url "passwordResetRequest" %}',
+                        type: 'POST',
+                        data: {
+                            email: email,
+                            csrfmiddlewaretoken: "{{ csrf_token }}",
+                            action: "passwordResetRequest",
+                            hostName: window.location.host,
+                        }, beforeSend: function() {
+                            loading('show', 'Request Sending...');
+                        }, success: function(response) {
+                            if(response.text == 'true') {
+                                removePasswordForm();
+                                loading('hide', 'Request Sent Successfully...', false);
+                                $('.notification').html('<i class="fa fa-check" aria-hidden="true" style="color: green;"></i> Password Reset Link has been sent to your Email. Please check');
+                                $('.notification').css('color', 'green');
+                                $('.notifications').addClass('notification_in');
+                                $('.notifications').removeClass('notification_out');
+                                setTimeout(function() {
+                                    $('.notifications').addClass('notification_out');
+                                    $('.notifications').removeClass('notification_in');
+                                }, 5500)
+                            }
+                        }
+                    })
+                })
+                document.querySelector('.passwordResetLink').addEventListener('click', function(event) {
+                    event.preventDefault();
+                    $('.password_reset').addClass('password_in');
+                    $('.password_reset').removeClass('password_out');
+                    document.querySelector('.passwordResetEmail').value = "";
+                    document.querySelector('.passwordScreen').style.display = 'block';
+                })
+                document.querySelector('.close_password').addEventListener('click', function(event) {
+                    event.preventDefault();
+                    removePasswordForm();
+                })
+                document.querySelector('.passwordScreen').addEventListener('click', function(evevt) {
+                    event.preventDefault();
+                    removePasswordForm();
+                })
+            </script>
+            {% block content %}
+                
+            {% endblock content %}
+        </section>
+    </div>
+</body>
+{% if messages %}
+    <script>
+        {% for message in messages %}
+            $('.notification').html('{{ message }}')
+        {% endfor %}
+        $('.notifications').addClass('notification_in');
+        $('.notifications').removeClass('notification_out');
+        setTimeout(function() {
+            $('.notifications').addClass('notification_out');
+            $('.notifications').removeClass('notification_in');
+        }, 2000)
+    </script>
+{% endif %}
+<script>
+    setTimeout(function() {
+        $('.notifications').addClass('notification_out');
+        $('.notifications').removeClass('notification_in');
+    }, 2000)
+
+    window.addEventListener('online', () => {
+        $('.notification').html('<i class="fa fa-check" aria-hidden="true" style="color: green;"></i> Welcome Back!!');
+        $('.notification').css('color', 'green');
+        $('.notifications').addClass('notification_in');
+        $('.notifications').removeClass('notification_out');
+        setTimeout(function() {
+            $('.notifications').addClass('notification_out');
+            $('.notifications').removeClass('notification_in');
+        }, 2000)
+    });
+    window.addEventListener('offline', () => {
+        $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Check Internet Connection!!')
+        $('.notification').css('color', 'red');
+        $('.notifications').addClass('notification_in');
+        $('.notifications').removeClass('notification_out');
+        setTimeout(function() {
+            $('.notifications').addClass('notification_out');
+            $('.notifications').removeClass('notification_in');
+        }, 2000)
+    });
+</script>
+</html>

@@ -1,0 +1,134 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+	<style>
+		.shares_div {
+			width: 70%;
+			max-height: 80vh;
+			padding: 20px;
+			overflow-y: auto;
+		}
+		.share_doc {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			grid-gap: 15px;
+			margin: 15px;
+		}
+		.share {
+			border: 0;
+			color: blue;
+			text-decoration: none;
+			font-weight: bold;
+			padding: 10px;
+			min-height: 60px;
+			border-radius: 12px;
+			box-shadow: 1px 1px 3px 1px grey;
+		}
+		.share:hover {
+			transform: scale(1.02);
+		}
+		.page_title {
+			padding: 15px;
+		}
+		.selectedDoctor {
+			padding: 8px;
+			width: 250px;
+			border-radius: 8px;
+			border: 0;
+		}
+	</style>
+	<div class="page_title">
+		<h2 style="color: red;">Shares</h2>
+	</div>
+	<div style="padding: 15px;">
+		Filter: <select name="selectedDoctor" class="selectedDoctor">
+			<option>All Doctors</option>
+		</select>
+	</div>
+	<div class="shares_div">
+		
+	</div>
+	<script type="text/javascript">
+		document.querySelector('.selectedDoctor').addEventListener('change', function(event) {
+			event.preventDefault();
+			var selectedDoctor = document.querySelector('.selectedDoctor').selectedIndex;
+			if(selectedDoctor > 0) {
+				selectedDoctor--;
+				var dataToFilter = document.querySelectorAll('.doctorMainDiv');
+				for(var i=0; i<dataToFilter.length; i++) {
+					if(selectedDoctor === i) {
+						document.querySelector(`.doctorIndex_${selectedDoctor}`).style.display = 'block';
+					} else {
+						document.querySelector(`.doctorIndex_${i}`).style.display = 'none';
+					}
+				}
+			} else {
+				var dataToFilter = document.querySelectorAll('.doctorMainDiv');
+				for(var i=0; i<dataToFilter.length; i++) {
+					document.querySelector(`.doctorIndex_${i}`).style.display = 'block';
+				}
+			}
+		})
+		loading('show', 'Loading...');
+		var shares = [];
+		var shares_div_index = 0;
+		var doctors = [];
+		const sharse_db = firebase.database().ref().child('shares');
+		function showShares(shareClass) {
+			console.log(shareClass);
+			if (document.querySelector(`.share_doc_${shareClass}`).style.display == 'none'){
+				document.querySelector(`.share_doc_${shareClass}`).style.display = 'grid';
+			}
+			else {
+				document.querySelector(`.share_doc_${shareClass}`).style.display = 'none';
+			}
+		}
+		sharse_db.on("child_added", function(snap) {
+			if(shares.length == 0) {
+				loading('hide', 'Loading...', delay=1000, load=false);
+			}
+			const share_files = Object.values(snap.val());
+			$('.shares_div').append(`
+				<div class="doctorMainDiv doctorIndex_${shares.length}">
+					<h4 class="doctorNameTag" onclick="showShares('${shares_div_index}')" style="margin-bottom: 15px; cursor: pointer;"><span class="doctorName_${shares_div_index}"></span> <i style="font-weight: bold;" class="fa fa-angle-down" aria-hidden="true"></i></h4>
+					<div class="share_doc share_doc_${shares_div_index}" style="display: none;"></div>
+				</div>
+			`)
+			var docCheck = 0;
+			for(var i=0; i<share_files.length; i++) {
+				if(share_files[i].doctorName !== undefined && docCheck === 0) {
+					$('.selectedDoctor').append(`<option value='${share_files[i].doctorName}'>${share_files[i].doctorName}</option>`)
+					$(`.doctorName_${shares_div_index}`).html(`${share_files[i].doctorName}`)
+					docCheck = 1;
+					doctors.push(share_files[i].doctorName);
+				}
+				if(share_files[i].filePath !== undefined) {
+					if(!share_files[i].filePath.includes("url")) {
+						var shareFilePath = share_files[i].filePath.split("_files/")[1];
+						var path = "home";
+						var pathList = shareFilePath.split("/");
+						for(var j=0; j<(pathList.length-1); j++) {
+							path += `/${pathList[j]}`;
+						}
+						$(`.share_doc_${shares_div_index}`).append(`
+							<a href="/files?path=${path}&scrollTo=${share_files[i].fileName}" target="blank" class="share share_${shares_div_index}_${i}">
+								<div>
+									<p>File Name: ${share_files[i].fileName}</p><br>
+									<p>Shared At: ${share_files[i].sharedAt}</p>
+								</div>
+							</a>
+						`)
+					}
+				}
+				if(share_files[i].seen !== 0 && share_files[i].seen !== undefined) {
+					$(`.share_${shares_div_index}_${i}`).css('color', 'green');
+					$(`.share_${shares_div_index}_${i}`).append(`<h4>Seen At: ${share_files[i].seenAt}</h4>`);
+				} else if(share_files[i].seen === 0 && share_files[i].seen !== undefined){
+					$(`.share_${shares_div_index}_${i}`).css('color', 'red');
+				}
+			}
+			$(`.share_doc_${shares_div_index}`).append(`<br>`)
+			shares.push(snap.val());
+			shares_div_index++;
+		})
+	</script>
+{% endblock content %}
