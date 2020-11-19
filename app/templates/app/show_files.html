@@ -387,7 +387,26 @@
                 <div><button onclick="window.location.href='/default?path=' + '{{ request.GET.path }}'"  class="pdf_create">Create PDF</button></div>
                 <span style="color: blue; font-weight: bold; margin-left: 20px;">Storage Used: <span class="storageSize">{{ totalSize }}</span> MB</span>
                 <span style="color: blue; font-weight: bold; margin-left: 20px;">Folder Size: <span class="folderSize">{{ folderSize }}</span> MB</span>
+                <a href="#" class="clearCache" style="text-decoration: none; color: blue; font-weight: bold; margin-left: 20px;">Clear Cache</a>
                 <script type="text/javascript">
+                    document.querySelector('.clearCache').addEventListener('click', function(event) {
+                        event.preventDefault();
+                        $.ajax({
+                            url: "{% url 'show_files' %}",
+                            type: "GET",
+                            data: {
+                                action: "clearCache",
+                            }, beforeSend: function() {
+                                loading('show', 'Clearing Cache..');
+                            }, success: function(response) {
+                                if(response.text=='true') {
+                                    loading('hide', 'Cleared Cache.');
+                                } else {
+                                    loading('hide', 'Error Occured.', delay=2000, load=false);
+                                }
+                            }
+                        })
+                    })
                     document.querySelector('.storageSize').innerHTML = Number(document.querySelector(".storageSize").innerText).toFixed(3);
                     document.querySelector('.folderSize').innerHTML = Number(document.querySelector(".folderSize").innerText).toFixed(3);
                 </script>

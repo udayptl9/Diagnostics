@@ -41,6 +41,17 @@
         background: white;
         user-select: none;
     }
+    .powered {
+        position: fixed;
+        bottom: 15px;
+        right: 15px;
+        color: blue;
+        opacity: 0.7;
+        z-index: 15;
+    }
+    .powered a {
+        text-decoration: none;
+    }
     .logo {
         text-transform: uppercase;
         font-weight: bold;
@@ -63,7 +74,6 @@
     .sidebar ul li a {
         text-decoration: none;
         color: red;
-        font-size: 18px;
         border: 0;
     }
     .sidebar ul li:hover {
@@ -362,6 +372,10 @@
                 
             {% endblock content %}
         </section>
+    </div>
+    <div class="powered">
+        <img src="https://bidsvijayapur.co.in/wp-content/uploads/2020/09/bidslogo-removebg-preview.png" alt="BLDS Logo" style="height: 20px;">
+        <a href="https://bidsvijayapur.co.in/" style="font-size: 20px;" target="blank">Powered By BIDS</a>
     </div>
 </body>
 {% if messages %}

@@ -45,6 +45,10 @@ section {
     grid-area: sidebar;
 }
 
+.sidebar ul li a{
+    font-size: 16px;
+}
+
 .sidebar ul {
     padding: 20px;
 }

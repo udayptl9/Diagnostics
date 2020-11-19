@@ -110,6 +110,17 @@ def show_files(request):
                 response = {}
                 response['text'] = 'false'
                 return JsonResponse(response)
+        elif request.GET.get('action') == 'clearCache':
+            response = {}
+            response['text'] = 'false'
+            tempFolder = media_files + "/files/" + user_token + "_files" + f'/temp/'
+            if os.path.exists(tempFolder):
+                for root, dirs, files in os.walk(tempFolder):
+                    for file in files:
+                        os.remove(os.path.join(root, file))
+                response['text'] = 'true'
+            return JsonResponse(response)
+
     if request.method == "POST":
         if request.POST.get('action') == "delete_file":
             file_name = request.POST.get('file_name')
