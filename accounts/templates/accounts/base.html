@@ -230,6 +230,20 @@
         background: rgba(158, 158, 201, 0.5);
         z-index: 6;
     }
+    .progressBar {
+        height: 1mm;
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+    .progressFilled {
+        height: 100%;
+        width: 0%;
+        position: absolute;
+        background: green;
+    }
 </style>
 <body>
     <div class="loading" style="display: none;">
@@ -248,6 +262,9 @@
         {% else %}
             <span class="notification"></span>
         {% endif %}
+        <div class="progressBar">
+            <div class="progressFilled"></div>
+        </div>
     </div>
     <div class="passwordScreen"></div>
     <div class="password_reset">
@@ -282,6 +299,7 @@
         </div>
         <section>
             <script type="text/javascript">
+                var isPaused = true;
                 document.body.style.zoom = "100%";
                 function loading(type, message, delay=2000, load=true) {
                     if (type === 'hide') {
@@ -299,23 +317,46 @@
                         console.log("Error: Please check type of loading!!")
                     }
                 }
-                function notification(type='error', message='Error Message', delay=2000) {
-                    if(type==='error') {
-                        $('.notification').html(`<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> ${message}`);
-                        $('.notification').css('color', 'red');
-                    } else if (type==='success') {
-                        $('.notification').html(`<i class="fa fa-check" aria-hidden="true" style="color: green;"></i> ${message}`);
+                function notification(type='success', message, delay=2000) {
+                    if(message === ""){
                         $('.notification').css('color', 'green');
+                        document.querySelector('.progressFilled').style.background = 'green';
                     } else {
-                        $('.notification').html(`<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Please Check Message type.`);
-                        $('.notification').css('color', 'red');
+                        if(type==='error') {
+                            $('.notification').html(`<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> ${message}`);
+                            $('.notification').css('color', 'red');
+                            document.querySelector('.progressFilled').style.background = 'red';
+                        } else if (type==='success') {
+                            $('.notification').html(`<i class="fa fa-check" aria-hidden="true" style="color: green;"></i> ${message}`);
+                            $('.notification').css('color', 'green');
+                            document.querySelector('.progressFilled').style.background = 'green';
+                        } else {
+                            $('.notification').html(`<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Please Check Message type.`);
+                            $('.notification').css('color', 'red');
+                        }
                     }
                     $('.notifications').addClass('notification_in');
                     $('.notifications').removeClass('notification_out');
-                    setTimeout(function() {
-                        $('.notifications').addClass('notification_out');
-                        $('.notifications').removeClass('notification_in');
-                    }, delay)
+                    let seconds = delay/1000;
+                    let bar = 0;
+                    let id = setInterval(function () {
+                        if ($('.notifications').is(':hover')) {
+                            isPaused = true;
+                            console.log("Hovered");
+                        } else {
+                            isPaused = false;
+                            console.log("Not Hovered");
+                        }
+                        if(!isPaused) {
+                            bar++;
+                            document.querySelector('.progressFilled').style.width = bar + "%";
+                            if (bar >= 100) {
+                                $('.notifications').addClass('notification_out');
+                                $('.notifications').removeClass('notification_in');
+                                clearInterval(id);
+                            }
+                        }
+                    }, seconds * 1000 / 100)
                 }
                 function removePasswordForm() {
                     $('.password_reset').removeClass('password_in');
@@ -381,41 +422,17 @@
 {% if messages %}
     <script>
         {% for message in messages %}
-            $('.notification').html('{{ message }}')
+            notification(type = 'success', message = '{{ message }}')
         {% endfor %}
-        $('.notifications').addClass('notification_in');
-        $('.notifications').removeClass('notification_out');
-        setTimeout(function() {
-            $('.notifications').addClass('notification_out');
-            $('.notifications').removeClass('notification_in');
-        }, 2000)
     </script>
 {% endif %}
 <script>
-    setTimeout(function() {
-        $('.notifications').addClass('notification_out');
-        $('.notifications').removeClass('notification_in');
-    }, 2000)
 
     window.addEventListener('online', () => {
-        $('.notification').html('<i class="fa fa-check" aria-hidden="true" style="color: green;"></i> Welcome Back!!');
-        $('.notification').css('color', 'green');
-        $('.notifications').addClass('notification_in');
-        $('.notifications').removeClass('notification_out');
-        setTimeout(function() {
-            $('.notifications').addClass('notification_out');
-            $('.notifications').removeClass('notification_in');
-        }, 2000)
+        notification(type='success', message='Welcome Back', delay=2000);
     });
     window.addEventListener('offline', () => {
-        $('.notification').html('<i class="fa fa-exclamation-circle" style="color: red;" aria-hidden="true"></i> Check Internet Connection!!')
-        $('.notification').css('color', 'red');
-        $('.notifications').addClass('notification_in');
-        $('.notifications').removeClass('notification_out');
-        setTimeout(function() {
-            $('.notifications').addClass('notification_out');
-            $('.notifications').removeClass('notification_in');
-        }, 2000)
+        notification(type = 'error', message = 'Check Internet Connection!!', delay = 2000);
     });
 </script>
 </html>

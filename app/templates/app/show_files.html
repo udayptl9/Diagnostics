@@ -31,6 +31,17 @@
         cursor: pointer;
         border-radius: 6px;
     }
+
+    .clearCache {
+        background: #1a73e8;
+        padding: 12px;
+        border: 0;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 6px;
+    }
+
     .path {
         display: inline;
         padding-left: 15px;
@@ -385,9 +396,9 @@
                     <button class="submit_button" type="submit">Submit</button>
                 </form>
                 <div><button onclick="window.location.href='/default?path=' + '{{ request.GET.path }}'"  class="pdf_create">Create PDF</button></div>
+                <div><button class="clearCache">Clear Cache</button></div>
                 <span style="color: blue; font-weight: bold; margin-left: 20px;">Storage Used: <span class="storageSize">{{ totalSize }}</span> MB</span>
                 <span style="color: blue; font-weight: bold; margin-left: 20px;">Folder Size: <span class="folderSize">{{ folderSize }}</span> MB</span>
-                <a href="#" class="clearCache" style="text-decoration: none; color: blue; font-weight: bold; margin-left: 20px;">Clear Cache</a>
                 <script type="text/javascript">
                     document.querySelector('.clearCache').addEventListener('click', function(event) {
                         event.preventDefault();

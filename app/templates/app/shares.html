@@ -102,16 +102,17 @@
 		var doctors = [];
 		const sharse_db = firebase.database().ref().child('shares');
 		function showShares(shareClass) {
-			console.log(shareClass);
 			if (document.querySelector(`.share_doc_${shareClass}`).style.display == 'none'){
 				document.querySelector(`.share_doc_${shareClass}`).style.display = 'grid';
 				$(`.share_doc_${shareClass}`).addClass('share_in');
 				$(`.share_doc_${shareClass}`).removeClass('share_out');
+				document.querySelector(`.fa-${shareClass}`).style.transform = 'rotate(180deg)';
 			}
 			else {
 				$(`.share_doc_${shareClass}`).addClass('share_out');
 				$(`.share_doc_${shareClass}`).removeClass('share_in');
 				document.querySelector(`.share_doc_${shareClass}`).style.display = 'none';
+				document.querySelector(`.fa-${shareClass}`).style.transform = 'rotate(0deg)';
 			}
 		}
 		sharse_db.on("child_added", function(snap) {
@@ -121,7 +122,7 @@
 			const share_files = Object.values(snap.val());
 			$('.shares_div').append(`
 				<div class="doctorMainDiv doctorIndex_${shares.length}">
-					<h4 class="doctorNameTag" onclick="showShares('${shares_div_index}')" style="margin-bottom: 15px; cursor: pointer;"><span class="doctorName_${shares_div_index}"></span> <i style="font-weight: bold;" class="fa fa-angle-down" aria-hidden="true"></i></h4>
+					<h4 class="doctorNameTag" onclick="showShares('${shares_div_index}')" style="margin-bottom: 15px; cursor: pointer;"><span class="doctorName_${shares_div_index}"></span> <i style="font-weight: bold; float: right;" class="fa fa-angle-down fa-${shares_div_index}" aria-hidden="true"></i></h4>
 					<div class="share_doc share_doc_${shares_div_index}" style="display: none;"></div>
 				</div>
 			`)
